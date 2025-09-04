@@ -1,0 +1,108 @@
+-- 1️⃣ Crear la base de datos
+CREATE DATABASE IF NOT EXISTS artesanias CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE artesanias;
+
+-- 2️⃣ Tabla de usuarios
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) NOT NULL UNIQUE,
+    contrasena VARCHAR(255) NOT NULL,
+    rol ENUM('usuario','vendedor') NOT NULL,
+    direccion VARCHAR(255), -- 📌 Nuevo: para envíos
+    telefono VARCHAR(20),   -- 📌 Nuevo: contacto
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3️⃣ Tabla de productos
+CREATE TABLE IF NOT EXISTS productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0, -- 📌 Nuevo: inventario
+    imagen VARCHAR(255),
+    vendedor_id INT NOT NULL,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vendedor_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- 4️⃣ Tabla de pedidos
+CREATE TABLE IF NOT EXISTS pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    metodo_pago_id INT, -- 📌 Relación con métodos de pago
+    total DECIMAL(10,2) NOT NULL,
+    estado ENUM('pendiente','pagado','enviado','entregado','cancelado') DEFAULT 'pendiente', 
+    direccion_envio VARCHAR(255), -- 📌 Dirección editable por pedido
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- 5️⃣ Tabla detalle de pedidos (qué productos pidió cada usuario)
+CREATE TABLE IF NOT EXISTS detalle_pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+);
+
+-- 6️⃣ Tabla de favoritos (usuarios guardan productos)
+CREATE TABLE IF NOT EXISTS favoritos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+);
+
+-- 7️⃣ Tabla de métodos de pago
+CREATE TABLE IF NOT EXISTS metodos_pago (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    tipo ENUM('tarjeta','paypal','transferencia','contraentrega') NOT NULL,
+    detalles VARCHAR(255), 
+    activo BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- 8️⃣ Tabla de reseñas (comentarios de usuarios sobre productos)
+CREATE TABLE IF NOT EXISTS resenas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    calificacion INT CHECK (calificacion BETWEEN 1 AND 5),
+    comentario TEXT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+-- 9️⃣ Tabla de envíos (seguimiento del pedido)
+CREATE TABLE IF NOT EXISTS envios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    empresa VARCHAR(100),
+    codigo_seguimiento VARCHAR(100),
+    estado ENUM('preparando','enviado','en camino','entregado') DEFAULT 'preparando',
+    fecha_envio TIMESTAMP NULL,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE
+);
+
+-- 🔍 Índices para mejorar rendimiento
+CREATE INDEX idx_producto_vendedor ON productos(vendedor_id);
+CREATE INDEX idx_pedido_usuario ON pedidos(usuario_id);
+CREATE INDEX idx_favorito_usuario ON favoritos(usuario_id);
+CREATE INDEX idx_resena_producto ON resenas(producto_id);
+CREATE INDEX idx_envio_pedido ON envios(pedido_id);
+
+-- ✅ Usuario de prueba
+INSERT INTO usuarios (nombre, correo, contrasena, rol, direccion, telefono) 
+VALUES ('Admin Prueba', 'admin@artesanias.com', 
+        '$2y$10$e0NRs7Kk/6PZl9YV7nOnS.2SzBj/KbQF0vB7.3W4F1HcU1I4uhKkK', 
+        'vendedor', 'Calle 123, Bogotá', '3001234567');
+-- Contraseña ejemplo: "123456"
