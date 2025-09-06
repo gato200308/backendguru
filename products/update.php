@@ -1,44 +1,57 @@
 <?php
-header("Content-Type: application/json");
-include "../db.php";
+header('Content-Type: application/json');
+require_once '../auth/db.php';
 
-$data = json_decode(file_get_contents("php://input"));
+$response = array();
 
-$id = $data->id;
-$nombre = $data->nombre;
-$descripcion = $data->descripcion;
-$precio = $data->precio;
-$imagen = $data->imagen;
-$vendedor_id = $data->vendedor_id;
-$rol = $data->rol;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = intval($_POST['id'] ?? 0);
+    $nombre = $_POST['nombre'] ?? '';
+    $descripcion = $_POST['descripcion'] ?? '';
+    $precio = floatval($_POST['precio'] ?? 0);
+    $stock = intval($_POST['stock'] ?? 0);
+    $imagenUrl = '';
 
-if($rol != 'vendedor'){
-    echo json_encode(["success" => false, "message" => "Solo los vendedores pueden actualizar productos"]);
-    exit;
+    // Subir imagen si existe
+    if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        $fileName = uniqid('prod_') . '_' . basename($_FILES['imagen']['name']);
+        $filePath = $uploadDir . $fileName;
+        if (move_uploaded_file($_FILES['imagen']['tmp_name'], $filePath)) {
+            $imagenUrl = 'uploads/' . $fileName;
+        }
+    }
+
+    $sql = "UPDATE productos SET nombre=?, descripcion=?, precio=?, stock=?";
+    if ($imagenUrl) {
+        $sql .= ", imagen=?";
+    }
+    $sql .= " WHERE id=?";
+
+    if ($imagenUrl) {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('ssdisi', $nombre, $descripcion, $precio, $stock, $imagenUrl, $id);
+    } else {
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('ssdii', $nombre, $descripcion, $precio, $stock, $id);
+    }
+
+    if ($stmt->execute()) {
+        $response['success'] = true;
+        $response['message'] = 'Producto actualizado correctamente';
+        $response['imagenUrl'] = $imagenUrl;
+    } else {
+        $response['success'] = false;
+        $response['message'] = 'Error al actualizar producto';
+    }
+    $stmt->close();
+} else {
+    $response['success'] = false;
+    $response['message'] = 'Método no permitido';
 }
 
-$stmt = $conn->prepare("SELECT * FROM productos WHERE id=:id AND vendedor_id=:vendedor_id");
-$stmt->bindParam(":id", $id);
-$stmt->bindParam(":vendedor_id", $vendedor_id);
-$stmt->execute();
-$producto = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if(!$producto){
-    echo json_encode(["success" => false, "message" => "Producto no encontrado o no autorizado"]);
-    exit;
-}
-
-try {
-    $stmt = $conn->prepare("UPDATE productos SET nombre=:nombre, descripcion=:descripcion, precio=:precio, imagen=:imagen WHERE id=:id");
-    $stmt->bindParam(":nombre", $nombre);
-    $stmt->bindParam(":descripcion", $descripcion);
-    $stmt->bindParam(":precio", $precio);
-    $stmt->bindParam(":imagen", $imagen);
-    $stmt->bindParam(":id", $id);
-    $stmt->execute();
-
-    echo json_encode(["success" => true, "message" => "Producto actualizado correctamente"]);
-} catch(PDOException $e) {
-    echo json_encode(["success" => false, "message" => $e->getMessage()]);
-}
+echo json_encode($response);
 ?>
