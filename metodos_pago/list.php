@@ -5,7 +5,7 @@ require_once '../auth/db.php';
 $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario_id = $_POST['usuario_id'] ?? 0;
+    $usuario_id = intval($_POST['usuario_id'] ?? 0);
     $sql = "SELECT * FROM metodos_pago WHERE usuario_id=?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('i', $usuario_id);

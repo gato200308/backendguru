@@ -6,7 +6,7 @@ require_once '../auth/db.php';
 $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario_id = $_POST['usuario_id'] ?? 0;
+    $usuario_id = intval($_POST['usuario_id'] ?? 0);
     $sql = "SELECT e.*, p.id AS pedido_id, p.estado AS estado_pedido
             FROM envios e
             JOIN pedidos p ON e.pedido_id = p.id

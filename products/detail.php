@@ -6,7 +6,7 @@ require_once '../auth/db.php';
 $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? 0;
+    $id = intval($_POST['id'] ?? 0);
     $sql = "SELECT * FROM productos WHERE id=?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('i', $id);

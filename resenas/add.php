@@ -5,9 +5,9 @@ require_once '../auth/db.php';
 $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario_id = $_POST['usuario_id'] ?? 0;
-    $producto_id = $_POST['producto_id'] ?? 0;
-    $calificacion = $_POST['calificacion'] ?? 5;
+    $usuario_id = intval($_POST['usuario_id'] ?? 0);
+    $producto_id = intval($_POST['producto_id'] ?? 0);
+    $calificacion = intval($_POST['calificacion'] ?? 5);
     $comentario = $_POST['comentario'] ?? '';
     $sql = "INSERT INTO resenas (producto_id, usuario_id, calificacion, comentario) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);

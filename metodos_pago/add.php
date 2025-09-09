@@ -6,7 +6,7 @@ require_once '../auth/db.php';
 $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $usuario_id = $_POST['usuario_id'] ?? 0;
+    $usuario_id = intval($_POST['usuario_id'] ?? 0);
     $tipo = $_POST['tipo'] ?? '';
     $datos = $_POST['datos'] ?? '';
     $sql = "INSERT INTO metodos_pago (usuario_id, tipo, datos) VALUES (?, ?, ?)";

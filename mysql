@@ -106,3 +106,5 @@ VALUES ('Admin Prueba', 'admin@artesanias.com',
         '$2y$10$e0NRs7Kk/6PZl9YV7nOnS.2SzBj/KbQF0vB7.3W4F1HcU1I4uhKkK', 
         'vendedor', 'Calle 123, Bogotá', '3001234567');
 -- Contraseña ejemplo: "123456"
+
+ALTER TABLE vendedores ADD foto_base64 LONGTEXT;
