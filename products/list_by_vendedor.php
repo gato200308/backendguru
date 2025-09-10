@@ -1,9 +1,5 @@
 <?php
-// filepath: c:\Users\santi\Documents\backendguru\products\delete.php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
+// filepath: c:\Users\santi\Documents\backendguru\products\list_by_vendedor.php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../auth/db.php';
 
@@ -11,17 +7,19 @@ $response = array();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
-    $id = intval($data['id'] ?? 0);
+    $vendedor_id = intval($data['vendedor_id'] ?? $_POST['vendedor_id'] ?? 0);
 
     try {
-        $sql = "DELETE FROM productos WHERE id=?";
+        $sql = "SELECT * FROM productos WHERE vendedor_id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$id]);
+        $stmt->execute([$vendedor_id]);
+        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         $response['success'] = true;
-        $response['message'] = 'Producto eliminado correctamente';
+        $response['productos'] = $productos;
     } catch (PDOException $e) {
         $response['success'] = false;
-        $response['message'] = 'Error al eliminar producto: ' . $e->getMessage();
+        $response['message'] = 'Error al obtener productos: ' . $e->getMessage();
     }
 } else {
     $response['success'] = false;
