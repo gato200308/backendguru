@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-include "../db.php";
+include __DIR__ . "/db.php";
 
 // Debug completo
 $raw_input = file_get_contents("php://input");
