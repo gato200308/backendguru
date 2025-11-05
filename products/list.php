@@ -1,6 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+// el resto de includes y código
 header("Content-Type: application/json");
-include "../db.php";
+require_once __DIR__ . '/../auth/db.php';
 
 try {
     $stmt = $conn->prepare("SELECT p.*, u.nombre AS vendedor_nombre 
